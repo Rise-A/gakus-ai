@@ -10,6 +10,7 @@ async function setupDatabase() {
   // createNotecardTable(db);
 
   await db.execAsync('DROP TABLE IF EXISTS Notecard');
+  await db.execAsync('DROP TABLE IF EXISTS Furigana');
 
   // print tables
   const tables = await db.getAllAsync("SELECT * FROM sqlite_master WHERE type='table'");
@@ -17,6 +18,12 @@ async function setupDatabase() {
 
   return db;
 }
+
+// ## Table Creation
+///////////////////////////////////////////////////////////////////////
+
+// # User Table
+///////////////////////////////////////////////////////////////////////
 
 async function createUserTable(db: SQLite.SQLiteDatabase) {
   await db.execAsync(
@@ -30,19 +37,55 @@ async function createUserTable(db: SQLite.SQLiteDatabase) {
   );
 }
 
+/////////////////////////////////////////////////////////////////////
+
+// # Notecard Tables
+/////////////////////////////////////////////////////////////////////
+
+
+async function createNotecardCategoryTable(db: SQLite.SQLiteDatabase) {
+  await db.execAsync(
+    `
+    CREATE TABLE IF NOT EXISTS NotecardCategory (
+      categoryID          INTEGER         PRIMARY KEY AUTOINCREMENT,
+      categoryName        TEXT            NOT NULL          
+    );
+    `
+  );
+}
+
+async function createNotecardFormalityTable(db: SQLite.SQLiteDatabase) {
+  await db.execAsync(
+    `
+    CREATE TABLE IF NOT EXISTS NotecardFormality (
+      formalityID         INTEGER         PRIMARY KEY AUTOINCREMENT,
+      formalityName       TEXT            NOT NULL          
+    );
+    `
+  );
+}
+
+// Notecard - Category: Many - One
+// Notecard - Script: Many - Many
+// Notecard - Formality: Many - One (Can be NULL, since it's not applicable to kana)
 async function createNotecardTable(db: SQLite.SQLiteDatabase) {
   await db.execAsync(
     `
     CREATE TABLE IF NOT EXISTS Notecard (
       notecardID        INTEGER         PRIMARY KEY AUTOINCREMENT,
-      category          TEXT            NOT NULL,
-      englishText       TEXT            NOT NULL,
+      categoryID        INTEGER         ,
+      formalityID       INTEGER         ,
+      englishText       TEXT            ,
       romajiText        TEXT            NOT NULL,
-      japaneseText      TEXT            NOT NULL
+      japaneseText      JSONB           NOT NULL,
+      FOREIGN KEY (categoryID)          REFERENCES NotecardCategory(categoryID),
+      FOREIGN KEY (formalityID)         REFERENCES NotecardFormality(formalityID)
     );
     `
+    // japaneseText: rawText, rubyText (id, furigana, kanji)
     // Scripts: Hiragana, Katakana, Kanji, Mixed
-    // Categories: Kana/Letter, Kotoba/Word, 
+    // Categories: Kana/Character, Kotoba/Word, Sentence
+    
   );
 }
 
@@ -50,64 +93,38 @@ async function createNotecardScriptTable(db: SQLite.SQLiteDatabase) {
   await db.execAsync(
     `
     CREATE TABLE IF NOT EXISTS NotecardScript (
-      notecardScriptID  INTEGER        PRIMARY KEY AUTOINCREMENT,
+      scriptID          INTEGER        PRIMARY KEY AUTOINCREMENT,
       scriptName        TEXT           NOT NULL
     );
     `
   );
 }
 
-// Since Notecard, and Notecard Category have a many-many relationship, an additional junction/join table is needed for both
-async function createNoteCategoryJunctionTable(db: SQLite.SQLiteDatabase) {
+// Since Notecard, and Notecard Script have a many-many relationship, an additional junction/join table is needed for both
+async function createNotecardScriptJunctionTable(db: SQLite.SQLiteDatabase) {
   await db.execAsync(
     `
     CREATE TABLE IF NOT EXISTS NotecardScriptJunction (
-      notecardID        INTEGER         NOT NULL,
-      notecardScriptID  INTEGER         NOT NULL,
-      PRIMARY KEY (notecardID, notecardScriptID),
-      FOREIGN KEY (notecardID)          REFERENCES Notecard(notecardID),
-      FOREIGN KEY (notecardScriptID)    REFERENCES NotecardScript(notecardScriptID)
+      notecardID         INTEGER         NOT NULL,
+      scriptID           INTEGER         NOT NULL,
+      PRIMARY KEY (notecardID, scriptID),
+      FOREIGN KEY (notecardID)           REFERENCES Notecard(notecardID),
+      FOREIGN KEY (scriptID)             REFERENCES NotecardScript(scriptID)
     );
     `
   );
 }
 
-// Maybe make it so in the japaneseText field, make the AI replace any kanji is replaced with something like [FURIGANA], and the AI will instead store the kanji + kana in a separate Furigana table
-// Then, for each Furigana entry tied to the notecard, loop through each furiganaID and replace any instances of [FURIGANA] before inserting it into the final notecard
+///////////////////////////////////////////////////////////////////////////
 
-// Or, maybe?? we don't even need to replace the kanji with [FURIGANA]
+// ## Initial Rows / Tuples (ie, kana)
+///////////////////////////////////////////////////////////////////////
+
 // Example of ruby in HTML (word: Kan ji):
 // <ruby>
 //   漢 <rp>(</rp><rt>Kan</rt><rp>)</rp> 字 <rp>(</rp><rt>ji</rt><rp>)</rp>
 // </ruby>
-async function createFuriganaTable(db: SQLite.SQLiteDatabase) {
-  await db.execAsync(
-    `
-    CREATE TABLE IF NOT EXISTS Furigana (
-      furiganaID        INTEGER         PRIMARY KEY AUTOINCREMENT,
-      notecardID        INTEGER         NOT NULL,
-      kana              TEXT            NOT NULL,
-      kanji             TEXT            NOT NULL,
-      FOREIGN KEY (notecardID)          REFERENCES Notecard(notecardID)
-    );
-    `
-  )
-}
-
-// NOTE: Actually, there's a way to display Furigana called "ruby text"
-// async function createFuriganaTable(db: SQLite.SQLiteDatabase) {
-//   await db.execAsync(
-//     `
-//     CREATE TABLE IF NOT EXISTS Furigana (
-//       furiganaID        INTEGER         PRIMARY KEY AUTOINCREMENT,
-//       notecardID        INTEGER         NOT NULL,
-//       k
-//     );
-//     `
-//   )
-// }
 
 export default setupDatabase;
- // Generated by Claude. Testing database setup, rewrite later
 
  // To run, open project in terminal, then run: npx expo start
