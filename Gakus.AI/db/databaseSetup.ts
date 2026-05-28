@@ -3,18 +3,35 @@ import * as SQLite from 'expo-sqlite';
 async function setupDatabase() {
   const db = await SQLite.openDatabaseAsync('gakusai_db.db');
 
-  // Creates User Table
+  // ## Table Creation
+  /////////////////////////
+
+  // # User Table
   createUserTable(db);
 
-  // Creates Notecard Table
-  // createNotecardTable(db);
+  /////////////////////////
 
-  await db.execAsync('DROP TABLE IF EXISTS Notecard');
-  await db.execAsync('DROP TABLE IF EXISTS Furigana');
+  // # Notecard Tables
+
+  createNotecardCategoryTable(db);
+
+  createNotecardFormalityTable(db);
+
+  // Creates Notecard Table
+  createNotecardTable(db);
+
+  createNotecardScriptTable(db);
+
+  createNotecardScriptJunctionTable(db);
+
+  /////////////////////////
+
+  // await db.execAsync('DROP TABLE IF EXISTS Notecard');
+  // await db.execAsync('DROP TABLE IF EXISTS Furigana');
 
   // print tables
-  const tables = await db.getAllAsync("SELECT * FROM sqlite_master WHERE type='table'");
-  console.log('DB contents:', tables);
+  // const tables = await db.getAllAsync("SELECT * FROM sqlite_master WHERE type='table'");
+  // console.log('DB contents:', tables);
 
   return db;
 }

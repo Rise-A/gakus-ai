@@ -1,0 +1,39 @@
+{
+   "englishText": "Hello, me and my friend here would like two waters please",
+   "romajiText": "Kon'nichiwa, watashi to tomodachi no bun de mizu o futatsu onegaishimasu.",
+   "japaneseText": {
+      "rawText": "こんにちは、私と友達の分で水を二つお願いします。",
+      "rubyText": [
+         {
+            "id": 1,
+            "furigana": "わたし",
+            "kanji": "私"
+         },
+         {
+            "id": 2,
+            "furigana": "ともだち",
+            "kanji": "友達"
+         },
+         {
+            "id": 3,
+            "furigana": "ぶん",
+            "kanji": "分"
+         },
+         {
+            "id": 4,
+            "furigana": "みず",
+            "kanji": "水"
+         },
+         {
+            "id": 5,
+            "furigana": "ふた",
+            "kanji": "二"
+         },
+         {
+            "id": 6,
+            "furigana": "ねが",
+            "kanji": "願"
+         }
+      ]
+   }
+}
